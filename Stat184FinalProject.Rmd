@@ -1,0 +1,63 @@
+---
+title: "Analyzing the Revenue of Sports Leagues"
+author: "Yoonjae Lee"
+date: "December 15, 2019"
+output: 
+    html_notebook:
+    fig_height: 6
+    fig_width: 10
+---
+
+### Test
+
+## Test
+
+# Test
+
+```{r}
+library(mosaic)
+library(tidyverse)
+library(lubridate)
+library(dplyr)
+library(xml2)
+library(rvest)
+
+page <- "https://en.wikipedia.org/wiki/List_of_professional_sports_leagues_by_revenue"
+tableList <- page %>%
+  read_html() %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+allTable <- 
+  tableList[[1]] %>%
+  rename(league = League,
+         sport = Sport,
+         countries = 'Country(ies)',
+         season = Season,
+         level = 'Level on pyramid',
+         teams = 'Teams[a]',
+         revenue = 'Revenue  (€ mil)',
+         ref = 'Ref.')
+
+footnote <- "\\[.\\]$| \\[.\\]|\\[unreliable source\\?\\]"
+
+allSummary <-
+  allTable %>%
+  select(league, sport, countries, revenue) %>%
+  mutate(revenue = gsub(pattern = footnote, replacement = "", revenue)) %>%
+  mutate(revenue = gsub(pattern = ",", replacement = "", revenue)) %>%
+  mutate(sport = gsub(pattern = "Football", replacement = "football", sport)) %>%
+  mutate(revenue = as.numeric(revenue))
+
+
+allSummary %>%
+  arrange( desc(revenue) ) %>% 
+  filter( rank(desc(revenue)) <= 20) %>% 
+  ggplot(aes(x = reorder(league, -revenue), y = revenue, fill = sport)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) + 
+  xlab("Leagues") +
+  ylab("Revenue in Million €")
+
+```
+
