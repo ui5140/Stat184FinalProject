@@ -22,9 +22,9 @@ The first question about this project was, what defines "popularity" of sports. 
 
 #### 1. Compare the annual revenue of each professional sport leagues in the world
 #### 2. Compare the annual revenue of each sports in the world (professional leagues combined)
-#### 3. Compare the annual revenue of each professional sport teams in the world
+#### 3. Compare the value of each professional sport teams in the world
 
-One of the other goals I considered was analyzing the history of annual revenue of each sports leagues, but it was not possible because a lot of sports league, including NFL, does not have an official record of the league's revenue.
+One of the other goals I considered was analyzing the history of annual revenue of each sports leagues, but it was not possible because a lot of sports league, including NFL, does not have an official history record of the league's revenue.
 
 # Dataset
 
@@ -44,13 +44,15 @@ library(rvest)
 
 # 1. The annual revenue of professional sport leagues
 
-## Loading dataset and cleaning it
+## Importing dataset and cleaning it
 ```{r}
 page <- "https://en.wikipedia.org/wiki/List_of_professional_sports_leagues_by_revenue"
 tableList <- page %>%
   read_html() %>%
   html_nodes(css = "table") %>%
   html_table(fill = TRUE)
+
+head(tableList[[1]])
 
 allTable <- 
   tableList[[1]] %>%
@@ -80,7 +82,6 @@ There are 92 professional sport leagues. To start with, I created a graph with a
 
 ```{r}
 allSummary %>%
-  arrange( desc(revenue) ) %>% 
   ggplot(aes(x = reorder(league, -revenue), y = revenue, fill = sport)) +
   geom_bar(stat = "identity") +
   theme(axis.text.x = element_text(angle = 30, hjust = 1)) + 
@@ -92,7 +93,6 @@ The graph is very hard to analyze because there are too many leagues. For #1, I 
 
 ```{r}
 allSummary %>%
-  arrange( desc(revenue) ) %>% 
   filter( rank(desc(revenue)) <= 20) %>% 
   ggplot(aes(x = reorder(league, -revenue), y = revenue, fill = sport)) +
   geom_bar(stat = "identity") +
@@ -110,7 +110,7 @@ There are few findings from this graph.
 
 In conclusion, NFL is the biggest single professional league. However, because there is only one American football league, the next analysis will likely give a different result.
 
-# 2. The annual revenue of each sports in the world (professional leagues combined)
+# 2. The annual revenue of each sports (professional leagues combined)
 
 ```{r}
 allSports1 <-
@@ -165,4 +165,73 @@ This graph is a visualization of the table above. Y axis of the black dot indica
 #### 3. Other than soccer, other sports mostly follow the order of the biggest leagues because there are only up to 6 different leagues and most of them have one big league that takes the majority of the sport.
 
 In conclusion, soccer as a sport is marginaly more popular than any other sports in the world.
+
+# 3. The value of each professional sport teams
+
+## Importing a new dataset and cleaning it
+```{r}
+page <- "https://en.wikipedia.org/wiki/Forbes%27_list_of_the_most_valuable_sports_teams"
+tableList2 <- page %>%
+  read_html() %>%
+  html_nodes(css = "table") %>%
+  html_table(fill = TRUE)
+
+head(tableList2[[1]])
+
+teamTable <- 
+  tableList2[[1]] %>%
+  rename(team = Team,
+         sport = Sport,
+         league = League,
+         value = 'Value (USD billion)')
+
+teamSummary <-
+  teamTable %>%
+  select(team, sport, league, value) %>%
+  mutate(value = gsub(pattern = "\\$", replacement = "", value)) %>% # removing $ in numerals for conversion
+  mutate(value = as.numeric(value))
+  
+teamSummary
+```
+
+Here is an imported and cleaned table of value of top 50 professional teams in billion USD. 
+
+```{r}
+teamSummary %>%
+  ggplot(aes(x = reorder(team, -value), y = value, fill = sport)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) + 
+  xlab("Teams") +
+  ylab("Revenue in Billion USD")
+```
+
+Like the first graph of the first question, having all 50 teams in one graph is not too clear.
+
+```{r}
+teamSummary %>%
+  filter( rank(desc(value)) <= 20) %>% 
+  ggplot(aes(x = reorder(team, -value), y = value, fill = sport, shape = league)) +
+  geom_bar(stat = "identity") +
+  theme(axis.text.x = element_text(angle = 30, hjust = 1)) + 
+  xlab("Teams") +
+  ylab("Revenue in Billion USD") +
+  geom_point()
+```
+
+This one includes only top 20 teams, and has a shape indicating which league the teams belongs in. Here are few reamrks:
+
+#### 1. The top 2 valuable teams are from top 2 revenue sports in the same order. Dallas Cowboys belongs to NFL and New York Yankees belongs to MLB. Real Madrid, the 3rd most valuable team, is in the same sport as EPL (the 3rd highest revenue league), but not the same league.
+#### 2. There are only 4 different sports in top 50.
+#### 3. The top 50 graph mostly contains NFL teams. However, the top 20 graph is rather well mixed between Football, Soccer, Baseball, and Basketball.
+
+
+In conclusion, NFL teams in average have a high value because NFL makes the most revenue. Football, Soccer, Baseball, and Basketball all have high value teams.
+
+# Final Conclusion
+
+Looking at several different perspectives, the conclusions were not the same. However, there are few common points which can be summarized into a conclusion.
+
+### 1. NFL is the most popular league in the world.
+### 2. Soccer is the most popular sports in the world.
+### 3. The Top 4 major sports in the world are Football, Soccer, Baseball, and Basketball.
 
