@@ -227,6 +227,7 @@ This one includes only top 20 teams, and has a shape indicating which league the
 
 In conclusion, NFL teams in average have a high value because NFL makes the most revenue. Football, Soccer, Baseball, and Basketball all have high value teams.
 
+
 # Final Conclusion
 
 Looking at several different perspectives, the conclusions were not the same. However, there are few common points which can be summarized into a conclusion.
